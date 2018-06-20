@@ -74,6 +74,7 @@ void dontthreadonme(int num_threads){  /*método para crianção de threads sepa
 int main(){
 	printf("insira na ordem: linhas, colunas, threads e valor a ser encontrado\n");
 	scanf("%d %d %d %f" , &M,&N,&T,&V);
+	printf("agora, insira o nome do arquivo NA MESMA PASTA desse programa\n");
 	scanf("%s", nome); /*recebe o nome do arquivo*/
 	matriz = alocaMatriz(M, N);
 	auxiliar = alocaMatriz(M, N);
@@ -92,7 +93,7 @@ int main(){
 	while(x < M){
 		while(y< N){
 			if (auxiliar[x][y] == 1){
-				printf("Valor encontrado na posicao %d, %d", x, y);
+				printf("Valor encontrado na posicao %d, %d\n", x, y);
 			}
 			y = y + 1;
 		}
