@@ -8,17 +8,24 @@ int M, N, T; /*em ordem Linhas, Colunas, Threads*/
 float V;    /*Valor a ser buscado*/
 float **matriz, **auxiliar; /*Matriz a ser alocada dinamicamente*/
 FILE *dados;
-char nome[100];
+char nome[21];
+FILE *resultado;
+typedef struct{
+	int lin;
+	int col;
+}pos;
 
+int contador=0;
 
-void* busca(void *t){         /*metodo de busca do valor na matriz*/
+void *busca(void *t){         /*metodo de busca do valor na matriz*/
 	int id = *((int *) t);
-	printf("entrando no metodo de busca do %d\n", id);
+	int nomethread = id;
 	while(id < M){
             int coluna = 0;
 		while (coluna < N){
 			if (matriz[id][coluna] == V){
-				auxiliar[id][coluna] = 1; /*digamos que colocamos um papel carbono por cima da matriz original e marcamos em outra matriz os valores encontrados*/
+				fprintf(resultado,"%d %d \n", id, coluna);
+				contador++;
 			}
 			coluna = coluna + 1;
 		}
@@ -27,7 +34,7 @@ void* busca(void *t){         /*metodo de busca do valor na matriz*/
 	pthread_exit(0);
 }
 
-void dontthreadonme(int num_threads){  /*método para crianção de threads separadas!*/
+void dontthreadonme(int num_threads){  /*método para criação de threads separadas!*/
 	pthread_t *thread = NULL;
         int *argumentos = NULL;
 
@@ -71,6 +78,51 @@ void dontthreadonme(int num_threads){  /*método para crianção de threads sepa
         free(argumentos);
 }
 
+void printsorted(FILE *arq){
+	int i, x_cont, y_cont, aux_lin, aux_col;
+	if (contador == 0){
+		printf("Valor nao encontrado\n");
+	}
+	else{
+		pos posicao[contador];
+		for(i=0;i<contador; i++){
+			fscanf(arq, "%d %d", &posicao[i].lin, &posicao[i].col);
+			printf("Posicao atual e contador: %d %d %d\n",posicao[i].lin,posicao[i].col,contador);
+		}
+		for(x_cont=0;x_cont<contador-1; x_cont++){
+			if(posicao[x_cont+1].lin > posicao[x_cont].lin){
+					printf("%d",x_cont);
+					aux_lin = posicao[x_cont].lin;
+					aux_col = posicao[x_cont].col;
+					posicao[x_cont].lin = posicao[x_cont+1].lin;
+					posicao[x_cont].col = posicao[x_cont+1].col;
+					posicao[x_cont+1].lin = aux_lin;
+					posicao[x_cont].col = aux_col;
+
+			}
+			
+		}
+		for(x_cont=0;x_cont<contador-1; x_cont++){
+			if(posicao[x_cont].lin == posicao[x_cont+1].lin){
+				if(posicao[x_cont].col < posicao[x_cont+1].col){
+					aux_col = posicao[x_cont].col;
+					posicao[x_cont].col = posicao[x_cont+1].col;
+					posicao[x_cont+1].col = aux_col;
+				}
+			x_cont++;		
+
+			}
+		}
+		y_cont = 0;
+		printf("Encontrado nas seguintes coordenadas: \n");
+		while(y_cont< contador){
+			printf("Linha:%d    Coluna:%d \n",posicao[y_cont].lin, posicao[y_cont].col);
+			y_cont++;
+		}
+	}
+}
+
+
 int main(){
 	printf("insira na ordem: linhas, colunas, threads e valor a ser encontrado\n");
 	scanf("%d %d %d %f" , &M,&N,&T,&V);
@@ -84,25 +136,20 @@ int main(){
 		printf("Erro, nao foi possivel abrir o arquivo\n");
 		return -1;
 	}
+	resultado = fopen("output.txt","w+"); /*abre o arquivo para leitura dos dados*/
 
 
 	preencheMatriz(dados,matriz, M, N);
+	fclose(dados);
 	dontthreadonme(T);
 	int x = 0;
 	int y = 0;
-	while(x < M){
-		while(y< N){
-			if (auxiliar[x][y] == 1){
-				printf("Valor encontrado na posicao %d, %d\n", x, y);
-			}
-			y = y + 1;
-		}
-		x = x + 1;
-	}
+
+	printsorted(resultado);
+
+	fclose(resultado);
 	matriz = liberaMatriz(M, N, matriz);
-	auxiliar = liberaMatriz(M, N, auxiliar);
-	fclose(dados);	
+	auxiliar = liberaMatriz(M, N, auxiliar);	
 	pthread_exit(NULL);
 	return 0;
 }
-
